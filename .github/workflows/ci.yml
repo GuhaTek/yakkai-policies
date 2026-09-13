@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      CONFTEST_VERSION: 0.70.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install conftest
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz" \
+            | tar -xz -C "$HOME/.local/bin" conftest
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Format check
+        run: conftest fmt --check rego
+      - name: Unit tests
+        run: conftest verify -p rego
